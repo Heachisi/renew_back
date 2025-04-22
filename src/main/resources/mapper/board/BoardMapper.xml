@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="back.mapper.board.BoardMapper"> <!-- 매퍼의 네임스페이스 설정 -->
+
+       <select id="getBoardList" parameterType="back.model.board.Board" resultType="back.model.board.Board">
+     
+         SELECT
+            B.RN,
+		    B.BOARD_ID,
+		    B.TITLE,
+		    B.CONTENT,
+		    B.VIEW_COUNT,
+		    B.CREATE_ID,
+		    B.UPDATE_ID,
+		    B.CREATE_DT,
+		    B.UPDATE_DT,
+		    B.DEL_YN
+        FROM(
+        SELECT
+            ROWNUM  AS RN,
+		    A.BOARD_ID,
+		    A.TITLE,
+		    A.CONTENT,
+		    A.VIEW_COUNT,
+		    A.CREATE_ID,
+		    A.UPDATE_ID,
+		    TO_CHAR(A.CREATE_DT,'YYYY-MM-DD') AS CREATE_DT,
+		    TO_CHAR(A.UPDATE_DT,'YYYY-MM-DD') AS UPDATE_DT,
+		    A.DEL_YN
+		  FROM BOARD A
+		  WHERE A.DEL_YN = 'N'
+	   )B
+		  WHERE B.RN BETWEEN #{startRow} AND #{endRow}
+    </select>
+    
+    <select id="getTotalBoardCount" resultType="int">
+        SELECT COUNT(*)
+          FROM BOARD
+         WHERE DEL_YN ='N'
+    </select>
+    
+    <!-- 사용자 ID로 사용자 정보 조회 -->
+    <select id="getBoardById" parameterType="string" resultType="back.model.board.Board">
+        SELECT
+		    BOARD_ID,
+		    TITLE,
+		    CONTENT,
+		    VIEW_COUNT,
+		    CREATE_ID,
+		    UPDATE_ID,
+		    CREATE_DT,
+		    UPDATE_DT,
+		    DEL_YN
+		  FROM BOARD
+		  WHERE BOARD_ID = #{boardId}
+		  AND DEL_YN = 'N'
+    </select>
+
+    <insert id="create" parameterType="back.model.board.Board">
+        INSERT INTO BOARD 
+	        (
+	        BOARD_ID, 
+	        TITLE, 
+	        CONTENT, 
+	        VIEW_COUNT, 
+	        CREATE_ID,
+	        CREATE_DT
+	        )
+	        VALUES
+	        (
+	        SEQ_BOARD.NEXTVAL,
+	        #{title}, 
+	        #{content}, 
+	        #{viewCount},
+	        #{createId},
+	        SYSDATE
+	        )
+       <selectKey keyProperty="boardId" resultType="string" order="AFTER">
+           SELECT SEQ_BOARD.CURRVAL FROM DUAL
+       </selectKey>
+    </insert>
+    
+    
+      <update id="update" parameterType="back.model.board.Board">
+        UPDATE BOARD 
+        SET TITLE = #{title}, 
+            CONTENT = #{content},  <!-- 삭제를 수행한 관리자 ID -->
+            VIEW_COUNT = #{viewCount},  <!-- 삭제 시간 기록 -->
+            UPDATE_ID = #{updateId}, 
+            UPDATE_DT = SYSDATE  
+        WHERE BOARD_ID = #{boardId}
+    </update>
+    
+    <!-- 댓글 등록 -->
+    <insert id="insertComment" parameterType="back.model.board.Comment">
+        INSERT INTO POST_COMMENT (COMMENT_ID, BOARD_ID, PARENT_COMMENT_ID, CONTENT, CREATE_ID)
+        VALUES (SEQ_COMMENT.NEXTVAL, #{boardId}, #{parentCommentId}, #{content}, #{createId})
+    </insert>
+
+    <!-- 게시글에 대한 댓글 조회 (대댓글 포함) -->
+    <select id="getCommentsByBoardId" parameterType="string" resultType="back.model.board.Comment">
+       SELECT
+		    COMMENT_ID,
+		    BOARD_ID,
+		    PARENT_COMMENT_ID,
+		    CONTENT,
+		    CREATE_ID,
+		    UPDATE_ID,
+		    TO_CHAR(CREATE_DT, 'YYYY-MM-DD') AS CREATE_DT,
+		    TO_CHAR(UPDATE_DT, 'YYYY-MM-DD') AS UPDATE_DT,
+		    DEL_YN
+		FROM POST_COMMENT
+		WHERE BOARD_ID = #{boardId}
+		    AND DEL_YN = 'N'
+		ORDER BY COMMENT_ID DESC
+    </select>
+
+    <!-- 댓글 조회 -->
+    <select id="getCommentById" parameterType="string" resultType="back.model.board.Comment">
+        SELECT *
+        FROM POST_COMMENT
+        WHERE COMMENT_ID = #{commentId}
+          AND DEL_YN = 'N'
+    </select>
+
+    <!-- 댓글 수정 -->
+    <update id="updateComment" parameterType="back.model.board.Comment">
+        UPDATE POST_COMMENT
+        SET CONTENT = #{content},
+            UPDATE_ID = #{updateId},
+            UPDATE_DT = SYSDATE
+        WHERE COMMENT_ID = #{commentId}
+    </update>
+
+    <!-- 댓글 삭제 -->
+    <update id="deleteComment" parameterType="back.model.board.Comment">
+        UPDATE POST_COMMENT
+        SET DEL_YN = 'Y',
+         UPDATE_ID = #{updateId},
+         UPDATE_DT = SYSDATE
+        WHERE COMMENT_ID = #{commentId}
+    </update>
+    
+    
+     <delete id="delete" parameterType="back.model.board.Board">
+        UPDATE BOARD 
+        SET DEL_YN = 'Y', 
+            UPDATE_ID = #{updateId}, 
+            UPDATE_DT = SYSDATE  
+        WHERE BOARD_ID = #{boardId}
+    </delete>
+
+   
+</mapper>
