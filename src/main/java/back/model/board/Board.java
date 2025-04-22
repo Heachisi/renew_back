@@ -27,7 +27,7 @@ public class Board extends Model {
     private String title;
     private String content;
     private String viewCount;
-
+ 
     // 페이징
     private int rn;
     private int startRow;
@@ -36,6 +36,7 @@ public class Board extends Model {
     private int size = 10; // 기본 페이지 크기 10
     private int totalCount;
     private int totalPages;
+    //충돌이라도
 
     // 연관 데이터
     private List<PostFile> postFiles;
