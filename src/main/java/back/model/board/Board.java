@@ -33,7 +33,7 @@ public class Board extends Model {
     private int startRow;
     private int endRow;
     private int page = 1; // 기본 페이지 1
-    private int size = 10; // 기본 페이지 크기 10
+    private int size = 15; // 기본 페이지 크기 10
     private int totalCount;
     private int totalPages;
     //충돌이라도
