@@ -37,6 +37,7 @@ public class Board extends Model {
     private int totalCount;
     private int totalPages;
     //충돌이라도
+    //이거 못 쓸 것 같은데
 
     // 연관 데이터
     private List<PostFile> postFiles;
